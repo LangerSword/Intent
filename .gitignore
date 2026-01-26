@@ -1,0 +1,30 @@
+# Intent - Git Ignore
+
+# Configuration with credentials (users create their own)
+lib/config.js
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Build artifacts
+dist/
+build/
+*.zip
+
+# Node (if using any build tools)
+node_modules/
+
+# Test
+coverage/
+.nyc_output/

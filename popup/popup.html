@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=400, initial-scale=1.0">
+  <title>Intent</title>
+  <link rel="stylesheet" href="popup.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo">
+        <svg class="logo-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        </svg>
+        <span class="logo-text">Intent</span>
+      </div>
+      <div class="header-actions">
+        <button id="settingsBtn" class="icon-btn" title="Settings">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3" />
+            <path
+              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+          </svg>
+        </button>
+        <button id="syncBtn" class="icon-btn sync-btn" title="Sync">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+            <path d="M3 3v5h5" />
+            <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
+            <path d="M16 16h5v5" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Current Page Info -->
+    <div id="currentPage" class="current-page">
+      <img id="pageFavicon" class="page-favicon" src="" alt="">
+      <div class="page-info">
+        <span id="pageTitle" class="page-title">Loading...</span>
+        <span id="pageUrl" class="page-url"></span>
+      </div>
+    </div>
+
+    <!-- Save Intent Form -->
+    <div id="saveSection" class="save-section">
+      <div class="intent-input-wrapper">
+        <label for="intentInput" class="intent-label">
+          Why are you saving this?
+        </label>
+        <textarea id="intentInput" class="intent-input"
+          placeholder="e.g., Research for project X, Read later for inspiration..." rows="2" maxlength="500"></textarea>
+        <div class="input-footer">
+          <span id="charCount" class="char-count">0/500</span>
+        </div>
+      </div>
+
+      <!-- Timer Bar -->
+      <div id="timerSection" class="timer-section hidden">
+        <div class="timer-bar">
+          <div id="timerProgress" class="timer-progress"></div>
+        </div>
+        <span class="timer-text">Take a moment to reflect...</span>
+      </div>
+
+      <!-- Save Button -->
+      <button id="saveBtn" class="save-btn" disabled>
+        <span class="btn-text">Save with Intent</span>
+      </button>
+
+      <!-- Already Saved State -->
+      <div id="savedState" class="saved-state hidden">
+        <div class="saved-badge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+          <span>Saved</span>
+        </div>
+        <p id="savedIntent" class="saved-intent"></p>
+        <div class="saved-meta">
+          <span id="savedDate"></span>
+          <span class="meta-separator">•</span>
+          <span id="visitCount"></span>
+        </div>
+        <button id="updateBtn" class="update-btn">Update Intent</button>
+      </div>
+    </div>
+
+    <!-- Bookmarks List -->
+    <div class="bookmarks-section">
+      <div class="section-header">
+        <h2 class="section-title">Your Saved Intents</h2>
+        <span id="bookmarkCount" class="bookmark-count">0</span>
+      </div>
+
+      <div class="search-wrapper">
+        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <circle cx="11" cy="11" r="8" />
+          <path d="m21 21-4.3-4.3" />
+        </svg>
+        <input type="text" id="searchInput" class="search-input" placeholder="Search bookmarks...">
+      </div>
+
+      <div id="bookmarksList" class="bookmarks-list">
+        <!-- Bookmarks will be rendered here -->
+      </div>
+
+      <div id="emptyState" class="empty-state hidden">
+        <svg class="empty-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="1.5">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+        </svg>
+        <p class="empty-text">No bookmarks yet</p>
+        <p class="empty-subtext">Save your first page with intention</p>
+      </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal hidden">
+      <div class="modal-backdrop"></div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Settings</h3>
+          <button id="closeSettingsBtn" class="close-btn">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="setting-item">
+            <label class="setting-label">
+              <span>Overlay Duration</span>
+              <select id="overlayDuration" class="setting-select">
+                <option value="3000">3 seconds</option>
+                <option value="5000">5 seconds</option>
+                <option value="10000">10 seconds</option>
+                <option value="0">Manual dismiss only</option>
+              </select>
+            </label>
+          </div>
+          <div class="setting-item">
+            <label class="setting-label">
+              <span>Overlay Position</span>
+              <select id="overlayPosition" class="setting-select">
+                <option value="bottom-right">Bottom Right</option>
+                <option value="bottom-left">Bottom Left</option>
+                <option value="top-right">Top Right</option>
+                <option value="top-left">Top Left</option>
+              </select>
+            </label>
+          </div>
+          <div class="setting-item">
+            <label class="setting-toggle">
+              <span>Dark Mode</span>
+              <input type="checkbox" id="darkModeToggle" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="setting-divider"></div>
+          <div class="setting-item">
+            <button id="exportBtn" class="setting-btn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7,10 12,15 17,10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              Export Bookmarks
+            </button>
+          </div>
+          <div class="setting-item">
+            <label class="setting-btn import-btn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17,8 12,3 7,8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+              Import Bookmarks
+              <input type="file" id="importInput" accept=".json" hidden>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Auth Modal -->
+    <div id="authModal" class="modal hidden">
+      <div class="modal-backdrop"></div>
+      <div class="modal-content auth-modal">
+        <div class="modal-header">
+          <h3 id="authModalTitle">Sign In</h3>
+          <button id="closeAuthBtn" class="close-btn">×</button>
+        </div>
+        <div class="modal-body">
+          <!-- Auth Status (shown when logged in) -->
+          <div id="authStatus" class="auth-status hidden">
+            <div class="auth-user">
+              <div class="auth-avatar">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+              </div>
+              <div class="auth-info">
+                <span id="authUserEmail" class="auth-email"></span>
+                <span class="auth-badge">Synced</span>
+              </div>
+            </div>
+            <button id="syncNowBtn" class="sync-now-btn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                <path d="M3 3v5h5" />
+                <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
+                <path d="M16 16h5v5" />
+              </svg>
+              Sync Now
+            </button>
+            <button id="signOutBtn" class="sign-out-btn">Sign Out</button>
+          </div>
+
+          <!-- Login Form -->
+          <form id="authForm" class="auth-form">
+            <div id="authError" class="auth-error hidden"></div>
+
+            <div class="form-group">
+              <label for="authEmail">Email</label>
+              <input type="email" id="authEmail" class="form-input" placeholder="you@example.com" required
+                autocomplete="email">
+            </div>
+
+            <div class="form-group">
+              <label for="authPassword">Password</label>
+              <input type="password" id="authPassword" class="form-input" placeholder="••••••••" required minlength="6"
+                autocomplete="current-password">
+            </div>
+
+            <button type="submit" id="authSubmitBtn" class="auth-submit-btn">
+              <span class="btn-text">Sign In</span>
+              <span class="btn-loader hidden"></span>
+            </button>
+          </form>
+
+          <!-- Toggle Sign Up / Sign In -->
+          <div class="auth-toggle">
+            <span id="authToggleText">Don't have an account?</span>
+            <button type="button" id="authToggleBtn" class="auth-toggle-btn">Sign Up</button>
+          </div>
+
+          <!-- Forgot Password -->
+          <button type="button" id="forgotPasswordBtn" class="forgot-password-btn">
+            Forgot password?
+          </button>
+
+          <!-- Cloud sync info -->
+          <p class="auth-note">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 16v-4" />
+              <path d="M12 8h.01" />
+            </svg>
+            Your bookmarks are encrypted and stored securely
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="popup.js" type="module"></script>
+</body>
+
+</html>

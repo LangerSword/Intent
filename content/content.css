@@ -1,0 +1,260 @@
+/* Intent - Content Script Styles */
+/* Subtle, non-intrusive overlay for displaying saved intent */
+
+/* ========================================
+   CSS CUSTOM PROPERTIES (Scoped to overlay)
+======================================== */
+#intent-overlay {
+    --intent-bg: rgba(15, 15, 20, 0.95);
+    --intent-text: #ffffff;
+    --intent-text-secondary: rgba(255, 255, 255, 0.7);
+    --intent-text-tertiary: rgba(255, 255, 255, 0.4);
+    --intent-accent: #667eea;
+    --intent-accent-secondary: #764ba2;
+    --intent-border: rgba(255, 255, 255, 0.1);
+    --intent-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    --intent-radius: 16px;
+    --intent-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ========================================
+   OVERLAY CONTAINER
+======================================== */
+.intent-overlay {
+    position: fixed;
+    z-index: 2147483647;
+    /* Maximum z-index */
+    max-width: 340px;
+    width: calc(100vw - 32px);
+
+    font-family: var(--intent-font);
+    font-size: 14px;
+    line-height: 1.5;
+
+    background: var(--intent-bg);
+    border: 1px solid var(--intent-border);
+    border-radius: var(--intent-radius);
+    box-shadow: var(--intent-shadow);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+
+    /* Initial hidden state */
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+    pointer-events: none;
+
+    transition:
+        opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+        transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Visible state */
+.intent-overlay--visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+}
+
+/* Exit animation */
+.intent-overlay--exiting {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+}
+
+/* ========================================
+   POSITION VARIANTS
+======================================== */
+.intent-overlay--bottom-right {
+    bottom: 20px;
+    right: 20px;
+}
+
+.intent-overlay--bottom-left {
+    bottom: 20px;
+    left: 20px;
+}
+
+.intent-overlay--top-right {
+    top: 20px;
+    right: 20px;
+    transform-origin: top right;
+}
+
+.intent-overlay--top-left {
+    top: 20px;
+    left: 20px;
+    transform-origin: top left;
+}
+
+/* Adjust transform for top positions */
+.intent-overlay--top-right,
+.intent-overlay--top-left {
+    transform: translateY(-20px) scale(0.95);
+}
+
+.intent-overlay--top-right.intent-overlay--visible,
+.intent-overlay--top-left.intent-overlay--visible {
+    transform: translateY(0) scale(1);
+}
+
+.intent-overlay--top-right.intent-overlay--exiting,
+.intent-overlay--top-left.intent-overlay--exiting {
+    transform: translateY(-10px) scale(0.98);
+}
+
+/* ========================================
+   HEADER
+======================================== */
+.intent-overlay__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 16px 0;
+}
+
+.intent-overlay__icon {
+    font-size: 18px;
+    filter: drop-shadow(0 0 6px rgba(102, 126, 234, 0.5));
+}
+
+.intent-overlay__title {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--intent-text);
+    letter-spacing: 0.02em;
+}
+
+.intent-overlay__close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+
+    color: var(--intent-text-tertiary);
+    font-size: 18px;
+    line-height: 1;
+
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.intent-overlay__close:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--intent-text);
+}
+
+/* ========================================
+   CONTENT
+======================================== */
+.intent-overlay__content {
+    padding: 12px 16px 16px;
+}
+
+.intent-overlay__intent {
+    margin: 0 0 10px;
+    font-size: 15px;
+    font-weight: 500;
+    font-style: italic;
+    color: var(--intent-text);
+    line-height: 1.6;
+}
+
+.intent-overlay__meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--intent-text-tertiary);
+}
+
+.intent-overlay__separator {
+    opacity: 0.5;
+}
+
+.intent-overlay__time {
+    background: linear-gradient(135deg, var(--intent-accent), var(--intent-accent-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 500;
+}
+
+.intent-overlay__visits {
+    padding: 2px 8px;
+    background: rgba(102, 126, 234, 0.15);
+    border-radius: 10px;
+    color: var(--intent-accent);
+    font-weight: 500;
+}
+
+/* ========================================
+   PROGRESS BAR
+======================================== */
+.intent-overlay__progress {
+    height: 3px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 0 0 var(--intent-radius) var(--intent-radius);
+    overflow: hidden;
+}
+
+.intent-overlay__progress-bar {
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(90deg, var(--intent-accent), var(--intent-accent-secondary));
+    border-radius: inherit;
+}
+
+/* ========================================
+   RESPONSIVE
+======================================== */
+@media (max-width: 480px) {
+    .intent-overlay {
+        max-width: calc(100vw - 24px);
+        margin: 0 12px;
+    }
+
+    .intent-overlay--bottom-right,
+    .intent-overlay--bottom-left {
+        bottom: 12px;
+        left: 0;
+        right: 0;
+        margin: 0 auto;
+    }
+
+    .intent-overlay--top-right,
+    .intent-overlay--top-left {
+        top: 12px;
+        left: 0;
+        right: 0;
+        margin: 0 auto;
+    }
+}
+
+/* ========================================
+   REDUCED MOTION
+======================================== */
+@media (prefers-reduced-motion: reduce) {
+    .intent-overlay {
+        transition: opacity 0.15s ease;
+        transform: none !important;
+    }
+
+    .intent-overlay--visible {
+        transform: none !important;
+    }
+}
+
+/* ========================================
+   PRINT STYLES
+======================================== */
+@media print {
+    .intent-overlay {
+        display: none !important;
+    }
+}
