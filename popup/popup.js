@@ -59,6 +59,10 @@ const elements = {
     exportBtn: document.getElementById('exportBtn'),
     importInput: document.getElementById('importInput'),
 
+    // Tabs
+    tabBtns: document.querySelectorAll('.tab-btn'),
+    tabContents: document.querySelectorAll('.tab-content'),
+
     // Auth modal
     authModal: document.getElementById('authModal'),
     closeAuthBtn: document.getElementById('closeAuthBtn'),
@@ -276,6 +280,31 @@ function setupEventListeners() {
 
     // Keyboard shortcuts
     document.addEventListener('keydown', handleKeyDown);
+
+    // Tab switching
+    elements.tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+    });
+}
+
+function switchTab(tabId) {
+    // Update buttons
+    elements.tabBtns.forEach(btn => {
+        if (btn.dataset.tab === tabId) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+
+    // Update content
+    elements.tabContents.forEach(content => {
+        if (content.id === `${tabId}Tab`) {
+            content.classList.add('active');
+        } else {
+            content.classList.remove('active');
+        }
+    });
 }
 
 function handleIntentInput(e) {

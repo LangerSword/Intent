@@ -41,87 +41,102 @@
       </div>
     </header>
 
-    <!-- Current Page Info -->
-    <div id="currentPage" class="current-page">
-      <img id="pageFavicon" class="page-favicon" src="" alt="">
-      <div class="page-info">
-        <span id="pageTitle" class="page-title">Loading...</span>
-        <span id="pageUrl" class="page-url"></span>
+    <!-- Tab Navigation -->
+    <nav class="tabs-nav">
+      <button class="tab-btn active" data-tab="save">Save</button>
+      <button class="tab-btn" data-tab="library">Library</button>
+    </nav>
+
+    <!-- Tab Content: Save -->
+    <div id="saveTab" class="tab-content active">
+
+      <!-- Current Page Info -->
+      <div id="currentPage" class="current-page">
+        <img id="pageFavicon" class="page-favicon" src="" alt="">
+        <div class="page-info">
+          <span id="pageTitle" class="page-title">Loading...</span>
+          <span id="pageUrl" class="page-url"></span>
+        </div>
+      </div>
+
+      <!-- Save Intent Form -->
+      <div id="saveSection" class="save-section">
+        <div class="intent-input-wrapper">
+          <label for="intentInput" class="intent-label">
+            Why are you saving this?
+          </label>
+          <textarea id="intentInput" class="intent-input"
+            placeholder="e.g., Research for project X, Read later for inspiration..." rows="2"
+            maxlength="500"></textarea>
+          <div class="input-footer">
+            <span id="charCount" class="char-count">0/500</span>
+          </div>
+        </div>
+
+        <!-- Timer Bar -->
+        <div id="timerSection" class="timer-section hidden">
+          <div class="timer-bar">
+            <div id="timerProgress" class="timer-progress"></div>
+          </div>
+          <span class="timer-text">Take a moment to reflect...</span>
+        </div>
+
+        <!-- Save Button -->
+        <button id="saveBtn" class="save-btn" disabled>
+          <span class="btn-text">Save with Intent</span>
+        </button>
+
+        <!-- Already Saved State -->
+        <div id="savedState" class="saved-state hidden">
+          <div class="saved-badge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+            <span>Saved</span>
+          </div>
+          <p id="savedIntent" class="saved-intent"></p>
+          <div class="saved-meta">
+            <span id="savedDate"></span>
+            <span class="meta-separator">•</span>
+            <span id="visitCount"></span>
+          </div>
+          <button id="updateBtn" class="update-btn">Update Intent</button>
+        </div>
       </div>
     </div>
 
-    <!-- Save Intent Form -->
-    <div id="saveSection" class="save-section">
-      <div class="intent-input-wrapper">
-        <label for="intentInput" class="intent-label">
-          Why are you saving this?
-        </label>
-        <textarea id="intentInput" class="intent-input"
-          placeholder="e.g., Research for project X, Read later for inspiration..." rows="2" maxlength="500"></textarea>
-        <div class="input-footer">
-          <span id="charCount" class="char-count">0/500</span>
+    <!-- Tab Content: Library -->
+    <div id="libraryTab" class="tab-content">
+
+      <!-- Bookmarks List -->
+      <div class="bookmarks-section">
+        <div class="section-header">
+          <h2 class="section-title">Your Saved Intents</h2>
+          <span id="bookmarkCount" class="bookmark-count">0</span>
         </div>
-      </div>
 
-      <!-- Timer Bar -->
-      <div id="timerSection" class="timer-section hidden">
-        <div class="timer-bar">
-          <div id="timerProgress" class="timer-progress"></div>
-        </div>
-        <span class="timer-text">Take a moment to reflect...</span>
-      </div>
-
-      <!-- Save Button -->
-      <button id="saveBtn" class="save-btn" disabled>
-        <span class="btn-text">Save with Intent</span>
-      </button>
-
-      <!-- Already Saved State -->
-      <div id="savedState" class="saved-state hidden">
-        <div class="saved-badge">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-            <polyline points="20 6 9 17 4 12" />
+        <div class="search-wrapper">
+          <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2">
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.3-4.3" />
           </svg>
-          <span>Saved</span>
+          <input type="text" id="searchInput" class="search-input" placeholder="Search bookmarks...">
         </div>
-        <p id="savedIntent" class="saved-intent"></p>
-        <div class="saved-meta">
-          <span id="savedDate"></span>
-          <span class="meta-separator">•</span>
-          <span id="visitCount"></span>
+
+        <div id="bookmarksList" class="bookmarks-list">
+          <!-- Bookmarks will be rendered here -->
         </div>
-        <button id="updateBtn" class="update-btn">Update Intent</button>
-      </div>
-    </div>
 
-    <!-- Bookmarks List -->
-    <div class="bookmarks-section">
-      <div class="section-header">
-        <h2 class="section-title">Your Saved Intents</h2>
-        <span id="bookmarkCount" class="bookmark-count">0</span>
-      </div>
-
-      <div class="search-wrapper">
-        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-          stroke-width="2">
-          <circle cx="11" cy="11" r="8" />
-          <path d="m21 21-4.3-4.3" />
-        </svg>
-        <input type="text" id="searchInput" class="search-input" placeholder="Search bookmarks...">
-      </div>
-
-      <div id="bookmarksList" class="bookmarks-list">
-        <!-- Bookmarks will be rendered here -->
-      </div>
-
-      <div id="emptyState" class="empty-state hidden">
-        <svg class="empty-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-          stroke-width="1.5">
-          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-        </svg>
-        <p class="empty-text">No bookmarks yet</p>
-        <p class="empty-subtext">Save your first page with intention</p>
+        <div id="emptyState" class="empty-state hidden">
+          <svg class="empty-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.5">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+          </svg>
+          <p class="empty-text">No bookmarks yet</p>
+          <p class="empty-subtext">Save your first page with intention</p>
+        </div>
       </div>
     </div>
 
