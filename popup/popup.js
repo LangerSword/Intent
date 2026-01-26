@@ -79,6 +79,16 @@ const elements = {
     authToggleText: document.getElementById('authToggleText'),
     authToggleBtn: document.getElementById('authToggleBtn'),
     forgotPasswordBtn: document.getElementById('forgotPasswordBtn'),
+
+    // Onboarding
+    onboardingModal: document.getElementById('onboardingModal'),
+    onboardingSlides: document.querySelectorAll('.onboarding-slide'),
+    onboardingFinish: document.getElementById('onboardingFinish'),
+    onboardingNext1: document.getElementById('onboardingNext1'),
+    onboardingNext2: document.getElementById('onboardingNext2'),
+    onboardingSkip1: document.getElementById('onboardingSkip1'),
+    onboardingSkip2: document.getElementById('onboardingSkip2'),
+    onboardingSkip3: document.getElementById('onboardingSkip3'),
 };
 
 // State
@@ -111,6 +121,12 @@ async function init() {
     settings = await getSettings();
     applySettings();
 
+    // Set up event listeners FIRST (so onboarding works)
+    setupEventListeners();
+
+    // Check onboarding
+    handleOnboarding();
+
     // Get current tab info
     await loadCurrentTab();
 
@@ -119,9 +135,6 @@ async function init() {
 
     // Check auth status
     await checkAuthStatus();
-
-    // Set up event listeners
-    setupEventListeners();
 
     // Set random placeholder
     setRandomPlaceholder();
@@ -258,7 +271,12 @@ function setupEventListeners() {
     // Settings
     elements.settingsBtn.addEventListener('click', () => openModal('settings'));
     elements.closeSettingsBtn.addEventListener('click', () => closeModal('settings'));
-    elements.settingsModal.querySelector('.modal-backdrop').addEventListener('click', () => closeModal('settings'));
+
+    // Check if modal backdrop exists before adding listener
+    const settingsBackdrop = elements.settingsModal.querySelector('.modal-backdrop');
+    if (settingsBackdrop) {
+        settingsBackdrop.addEventListener('click', () => closeModal('settings'));
+    }
 
     elements.overlayDuration.addEventListener('change', handleSettingChange);
     elements.overlayPosition.addEventListener('change', handleSettingChange);
@@ -270,7 +288,12 @@ function setupEventListeners() {
     // Auth
     elements.syncBtn.addEventListener('click', () => openModal('auth'));
     elements.closeAuthBtn.addEventListener('click', () => closeModal('auth'));
-    elements.authModal.querySelector('.modal-backdrop').addEventListener('click', () => closeModal('auth'));
+
+    // Check if auth backdrop exists
+    const authBackdrop = elements.authModal.querySelector('.modal-backdrop');
+    if (authBackdrop) {
+        authBackdrop.addEventListener('click', () => closeModal('auth'));
+    }
 
     elements.authForm.addEventListener('submit', handleAuthSubmit);
     elements.authToggleBtn.addEventListener('click', toggleAuthMode);
@@ -285,9 +308,94 @@ function setupEventListeners() {
     elements.tabBtns.forEach(btn => {
         btn.addEventListener('click', () => switchTab(btn.dataset.tab));
     });
+
+    // Onboarding - use event delegation for reliability
+    const onboardingModal = document.getElementById('onboardingModal');
+    if (onboardingModal) {
+        onboardingModal.addEventListener('click', (e) => {
+            const target = e.target.closest('button');
+            if (!target) return;
+
+            if (target.id === 'onboardingNext1') {
+                showSlide(2);
+            } else if (target.id === 'onboardingNext2') {
+                showSlide(3);
+            } else if (target.id === 'onboardingFinish' ||
+                target.id === 'onboardingSkip1' ||
+                target.id === 'onboardingSkip2' ||
+                target.id === 'onboardingSkip3') {
+                finishOnboarding();
+            }
+        });
+    }
+}
+
+async function handleOnboarding() {
+    const result = await chrome.storage.local.get('hasSeenOnboarding');
+    if (!result.hasSeenOnboarding) {
+        // Show onboarding
+        setTimeout(() => {
+            elements.onboardingModal.classList.add('visible');
+        }, 500);
+    }
+}
+
+function showSlide(step) {
+    elements.onboardingSlides.forEach(slide => {
+        if (parseInt(slide.dataset.step) === step) {
+            slide.classList.add('active');
+        } else {
+            slide.classList.remove('active');
+        }
+    });
+}
+
+function finishOnboarding() {
+    const modal = document.getElementById('onboardingModal');
+    if (modal) {
+        modal.classList.remove('visible');
+    }
+    chrome.storage.local.set({ hasSeenOnboarding: true });
+}
+
+// ========================================
+// MODAL FUNCTIONS
+// ========================================
+
+function openModal(name) {
+    if (name === 'settings') {
+        elements.settingsModal.classList.remove('hidden');
+        elements.settingsModal.classList.add('visible');
+    } else if (name === 'auth') {
+        elements.authModal.classList.remove('hidden');
+        elements.authModal.classList.add('visible');
+
+        // Show appropriate state
+        if (currentUser) {
+            showAuthenticatedState();
+        } else {
+            showLoginForm();
+        }
+    }
+}
+
+function closeModal(name) {
+    if (name === 'settings') {
+        elements.settingsModal.classList.remove('visible');
+        elements.settingsModal.classList.add('hidden');
+    } else if (name === 'auth') {
+        elements.authModal.classList.remove('visible');
+        elements.authModal.classList.add('hidden');
+    }
 }
 
 function switchTab(tabId) {
+    // Update container data attribute for indicator animation
+    const tabsContainer = document.querySelector('.tabs-container');
+    if (tabsContainer) {
+        tabsContainer.setAttribute('data-active-tab', tabId);
+    }
+
     // Update buttons
     elements.tabBtns.forEach(btn => {
         if (btn.dataset.tab === tabId) {
@@ -643,7 +751,25 @@ async function handleAuthSubmit(e) {
         await handleSyncNow();
     } catch (error) {
         console.error('Intent: Auth error', error);
-        showAuthError(error.message || 'Authentication failed. Please try again.');
+
+        // Detailed error handling
+        let message = error.message || 'Authentication failed. Please try again.';
+
+        if (message.includes('Invalid email or password')) {
+            message = 'Incorrect email or password.';
+            // If they are in Sign In mode, maybe they need to Sign Up?
+            if (!isSignUpMode) {
+                // We could show a hint, but keeping it simple is better.
+                // Just ensuring the message is friendly.
+            }
+        } else if (message.includes('User already registered')) {
+            message = 'This email is already registered. Try signing in?';
+            if (isSignUpMode) {
+                // Auto-switch to sign in? No, let user choose.
+            }
+        }
+
+        showAuthError(message);
     } finally {
         setAuthLoading(false);
     }
@@ -742,33 +868,6 @@ function showLoginForm() {
     elements.authEmail.value = '';
     elements.authPassword.value = '';
     hideAuthError();
-}
-
-// ========================================
-// MODALS
-// ========================================
-
-function openModal(name) {
-    if (name === 'settings') {
-        elements.settingsModal.classList.remove('hidden');
-    } else if (name === 'auth') {
-        elements.authModal.classList.remove('hidden');
-
-        // Show appropriate state
-        if (currentUser) {
-            showAuthenticatedState();
-        } else {
-            showLoginForm();
-        }
-    }
-}
-
-function closeModal(name) {
-    if (name === 'settings') {
-        elements.settingsModal.classList.add('hidden');
-    } else if (name === 'auth') {
-        elements.authModal.classList.add('hidden');
-    }
 }
 
 // ========================================

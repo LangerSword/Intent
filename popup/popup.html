@@ -43,8 +43,11 @@
 
     <!-- Tab Navigation -->
     <nav class="tabs-nav">
-      <button class="tab-btn active" data-tab="save">Save</button>
-      <button class="tab-btn" data-tab="library">Library</button>
+      <div class="tabs-container" data-active-tab="save">
+        <div class="tab-indicator"></div>
+        <button class="tab-btn active" data-tab="save">Save</button>
+        <button class="tab-btn" data-tab="library">Library</button>
+      </div>
     </nav>
 
     <!-- Tab Content: Save -->
@@ -259,18 +262,14 @@
               <span class="btn-text">Sign In</span>
               <span class="btn-loader hidden"></span>
             </button>
+
+            <button type="button" id="forgotPasswordBtn" class="forgot-password-btn">Forgot password?</button>
+
+            <div class="auth-toggle">
+              <span id="authToggleText">Don't have an account?</span>
+              <button type="button" id="authToggleBtn" class="auth-toggle-btn">Sign Up</button>
+            </div>
           </form>
-
-          <!-- Toggle Sign Up / Sign In -->
-          <div class="auth-toggle">
-            <span id="authToggleText">Don't have an account?</span>
-            <button type="button" id="authToggleBtn" class="auth-toggle-btn">Sign Up</button>
-          </div>
-
-          <!-- Forgot Password -->
-          <button type="button" id="forgotPasswordBtn" class="forgot-password-btn">
-            Forgot password?
-          </button>
 
           <!-- Cloud sync info -->
           <p class="auth-note">
@@ -281,6 +280,77 @@
             </svg>
             Your bookmarks are encrypted and stored securely
           </p>
+        </div>
+      </div>
+    </div>
+    <!-- Onboarding Modal -->
+    <div id="onboardingModal" class="modal">
+      <div class="modal-content">
+        <div class="onboarding-slider">
+          <!-- Slide 1 -->
+          <div class="onboarding-slide active" data-step="1">
+            <button class="skip-btn" id="onboardingSkip1">Skip</button>
+            <svg class="onboarding-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="1.5">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>
+            <h2 class="onboarding-title">Save with Purpose</h2>
+            <p class="onboarding-text">Stop hoarding links you'll never read. <strong>Intent</strong> helps you capture
+              <em>why</em> you're saving a page, making your bookmarks actually useful later.
+            </p>
+            <div class="step-indicators">
+              <div class="step-dot active"></div>
+              <div class="step-dot"></div>
+              <div class="step-dot"></div>
+            </div>
+            <div class="onboarding-actions">
+              <button class="onboarding-btn" id="onboardingNext1">Continue</button>
+            </div>
+          </div>
+
+          <!-- Slide 2 -->
+          <div class="onboarding-slide" data-step="2">
+            <button class="skip-btn" id="onboardingSkip2">Skip</button>
+            <svg class="onboarding-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="1.5">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+            <h2 class="onboarding-title">The 3-Second Rule</h2>
+            <p class="onboarding-text">When you save, we ask you to pause for just <strong>3 seconds</strong>. This
+              brief moment of reflection helps you articulate a clear, actionable intent.</p>
+            <div class="step-indicators">
+              <div class="step-dot"></div>
+              <div class="step-dot active"></div>
+              <div class="step-dot"></div>
+            </div>
+            <div class="onboarding-actions">
+              <button class="onboarding-btn" id="onboardingNext2">Got it</button>
+            </div>
+          </div>
+
+          <!-- Slide 3 -->
+          <div class="onboarding-slide" data-step="3">
+            <button class="skip-btn" id="onboardingSkip3">Skip</button>
+            <svg class="onboarding-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="1.5">
+              <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+              <path d="M3 3v5h5" />
+              <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
+              <path d="M16 16h5v5" />
+            </svg>
+            <h2 class="onboarding-title">Your Second Brain</h2>
+            <p class="onboarding-text">Sign in to sync your intents across devices. When you revisit a saved page, we'll
+              remind you exactly why you saved it.</p>
+            <div class="step-indicators">
+              <div class="step-dot"></div>
+              <div class="step-dot"></div>
+              <div class="step-dot active"></div>
+            </div>
+            <div class="onboarding-actions">
+              <button class="onboarding-btn" id="onboardingFinish">Start Using Intent</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
