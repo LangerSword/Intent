@@ -21,7 +21,7 @@
     "default_title": "Intent - Save with Purpose"
   },
   "background": {
-    "service_worker": "background/service-worker.js",
+    "service_worker": "background/scripts.js",
     "type": "module"
   },
   "content_scripts": [

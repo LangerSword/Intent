@@ -6,13 +6,13 @@
 import { getBookmarkByUrl, recordVisit, getSettings } from '../lib/storage.js';
 
 // Listen for tab updates to check for saved bookmarks
-chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+browser.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     // Only check when navigation is complete
     if (changeInfo.status !== 'complete' || !tab.url) return;
 
-    // Skip chrome:// and extension pages
-    if (tab.url.startsWith('chrome://') ||
-        tab.url.startsWith('chrome-extension://') ||
+    // Skip browser:// and extension pages
+    if (tab.url.startsWith('browser://') ||
+        tab.url.startsWith('browser-extension://') ||
         tab.url.startsWith('about:')) {
         return;
     }
@@ -25,7 +25,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
             await recordVisit(tab.url);
 
             // Send message to content script to show overlay
-            chrome.tabs.sendMessage(tabId, {
+            browser.tabs.sendMessage(tabId, {
                 type: 'SHOW_INTENT_OVERLAY',
                 bookmark: bookmark,
             }).catch(() => {
@@ -38,7 +38,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 });
 
 // Listen for messages from popup and content scripts
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
     handleMessage(message, sender).then(sendResponse);
     return true; // Keep channel open for async response
 });
@@ -60,7 +60,7 @@ async function handleMessage(message, sender) {
         case 'BOOKMARK_SAVED':
             // Notify content script if on the same page
             if (message.bookmark && message.tabId) {
-                chrome.tabs.sendMessage(message.tabId, {
+                browser.tabs.sendMessage(message.tabId, {
                     type: 'BOOKMARK_UPDATED',
                     bookmark: message.bookmark,
                 }).catch(() => { });
@@ -76,7 +76,7 @@ async function handleMessage(message, sender) {
  * Get the current active tab
  */
 async function getCurrentTab() {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
 
     if (!tab) {
         return null;
@@ -91,14 +91,14 @@ async function getCurrentTab() {
 }
 
 // Handle extension installation
-chrome.runtime.onInstalled.addListener((details) => {
+browser.runtime.onInstalled.addListener((details) => {
     if (details.reason === 'install') {
         console.log('Intent: Extension installed successfully! 🎯');
 
         // Could open a welcome page here
-        // chrome.tabs.create({ url: 'welcome.html' });
+        // browser.tabs.create({ url: 'welcome.html' });
     } else if (details.reason === 'update') {
-        console.log(`Intent: Updated to version ${chrome.runtime.getManifest().version}`);
+        console.log(`Intent: Updated to version ${browser.runtime.getManifest().version}`);
     }
 });
 
