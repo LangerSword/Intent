@@ -14,7 +14,7 @@ let overlayElement = null;
 let dismissTimeout = null;
 
 // Listen for messages from background script
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === 'SHOW_INTENT_OVERLAY') {
         showOverlay(message.bookmark);
         sendResponse({ success: true });
@@ -30,7 +30,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 // Load settings on init
 async function loadSettings() {
     try {
-        const response = await chrome.runtime.sendMessage({ type: 'GET_SETTINGS' });
+        const response = await browser.runtime.sendMessage({ type: 'GET_SETTINGS' });
         if (response) {
             overlayConfig.duration = response.overlayDuration || 5000;
             overlayConfig.position = response.overlayPosition || 'bottom-right';

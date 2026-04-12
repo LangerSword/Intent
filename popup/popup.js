@@ -3,6 +3,7 @@
  * Main UI logic for saving bookmarks with intent
  */
 
+import '/lib/browser-polyfill.js';
 import {
     getBookmarks,
     saveBookmark,
@@ -13,9 +14,9 @@ import {
     updateSettings,
     exportBookmarks,
     importBookmarks
-} from '../lib/storage.js';
+} from '/lib/storage.js';
 
-import { getSupabase, isConfigured } from '../lib/supabase.js';
+import { getSupabase, isConfigured } from '/lib/supabase.js';
 
 // DOM Elements
 const elements = {
@@ -167,38 +168,41 @@ function updateSyncButtonState() {
 }
 
 async function loadCurrentTab() {
+    console.log('Intent: Attempting to load current tab...');
     try {
-        const response = await chrome.runtime.sendMessage({ type: 'GET_CURRENT_TAB' });
+        // Adding a timeout to the message so it doesn't hang forever
+        const timeout = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Background script timeout')), 2000)
+        );
+
+        const response = await Promise.race([
+            browser.runtime.sendMessage({ type: 'GET_CURRENT_TAB' }),
+            timeout
+        ]);
+
+        console.log('Intent: Received background response:', response);
 
         if (!response || !response.url) {
+            console.warn('Intent: Background returned empty tab data');
             showUnsupportedPage();
             return;
         }
 
         currentTab = response;
 
-        // Update UI
+        // UI Updates
         elements.pageFavicon.src = currentTab.favicon || getDefaultFavicon(currentTab.url);
-        elements.pageFavicon.onerror = () => {
-            elements.pageFavicon.src = getDefaultFavicon(currentTab.url);
-        };
         elements.pageTitle.textContent = currentTab.title || 'Untitled';
         elements.pageUrl.textContent = new URL(currentTab.url).hostname;
 
-        // Check if already bookmarked
         existingBookmark = await getBookmarkByUrl(currentTab.url);
+        existingBookmark ? showSavedState() : showSaveForm();
 
-        if (existingBookmark) {
-            showSavedState();
-        } else {
-            showSaveForm();
-        }
     } catch (error) {
-        console.error('Intent: Error loading current tab', error);
+        console.error('Intent Debug: loadCurrentTab failed:', error.message);
         showUnsupportedPage();
     }
 }
-
 function showUnsupportedPage() {
     elements.pageTitle.textContent = 'Unsupported page';
     elements.pageUrl.textContent = 'Cannot save this page';
@@ -331,7 +335,7 @@ function setupEventListeners() {
 }
 
 async function handleOnboarding() {
-    const result = await chrome.storage.local.get('hasSeenOnboarding');
+    const result = await browser.storage.local.get('hasSeenOnboarding');
     if (!result.hasSeenOnboarding) {
         // Show onboarding
         setTimeout(() => {
@@ -355,7 +359,7 @@ function finishOnboarding() {
     if (modal) {
         modal.classList.remove('visible');
     }
-    chrome.storage.local.set({ hasSeenOnboarding: true });
+    browser.storage.local.set({ hasSeenOnboarding: true });
 }
 
 // ========================================
@@ -474,7 +478,7 @@ async function handleSave() {
         existingBookmark = bookmark;
 
         // Notify background script
-        chrome.runtime.sendMessage({
+        browser.runtime.sendMessage({
             type: 'BOOKMARK_SAVED',
             bookmark: bookmark,
             tabId: currentTab.id,
@@ -581,7 +585,7 @@ function renderBookmarks(bookmarks) {
         item.addEventListener('click', (e) => {
             if (e.target.closest('.delete-btn')) return;
             const url = decodeURIComponent(item.dataset.url);
-            chrome.tabs.create({ url });
+            browser.tabs.create({ url });
         });
     });
 
@@ -823,7 +827,7 @@ async function handleSyncNow() {
         const mergedBookmarks = await supabase.syncBookmarks(localBookmarks);
 
         // Update local storage with merged bookmarks
-        await chrome.storage.local.set({ intent_bookmarks: mergedBookmarks });
+        await browser.storage.local.set({ intent_bookmarks: mergedBookmarks });
 
         // Reload UI
         await loadBookmarks();

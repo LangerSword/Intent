@@ -21,7 +21,7 @@
     "default_title": "Intent - Save with Purpose"
   },
   "background": {
-    "service_worker": "background.js",
+    "scripts": ["background.js"],
     "type": "module"
   },
   "content_scripts": [
@@ -42,5 +42,11 @@
       "resources": ["icons/*"],
       "matches": ["<all_urls>"]
     }
-  ]
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "intent-port@lakshaya.com",
+      "strict_min_version": "109.0"
+    }
+  }
 }
