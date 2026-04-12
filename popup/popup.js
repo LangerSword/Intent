@@ -171,14 +171,16 @@ async function loadCurrentTab() {
     console.log('Intent: Attempting to load current tab...');
     try {
         // Adding a timeout to the message so it doesn't hang forever
-        const timeout = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Background script timeout')), 2000)
-        );
+        let timeoutId;
+        const timeout = new Promise((resolve) => {
+            timeoutId = setTimeout(() => resolve(null), 2000);
+        });
 
         const response = await Promise.race([
             browser.runtime.sendMessage({ type: 'GET_CURRENT_TAB' }),
             timeout
         ]);
+        clearTimeout(timeoutId);
 
         console.log('Intent: Received background response:', response);
 

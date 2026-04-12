@@ -24,7 +24,6 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
             updateOverlay(message.bookmark);
         }
     }
-    return true;
 });
 
 // Load settings on init

@@ -8,11 +8,10 @@ import { getBookmarkByUrl, recordVisit, getSettings } from './lib/storage.js'; /
 
 // This must be at the top level, not inside an async block
 browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.type === 'GET_CURRENT_TAB') {
-        // We use a promise here because sendResponse is synchronous in some contexts
-        getCurrentTab().then(sendResponse);
-        return true; // ESSENTIAL: Tells Firefox to keep the message channel open
-    }
+    handleMessage(message, sender)
+        .then(response => sendResponse(response))
+        .catch(error => sendResponse({ error: error.message }));
+    return true; // ESSENTIAL: Keeps the message channel open for the async response
 });
 
 // Helper to ensure content script is ready
