@@ -247,27 +247,27 @@
             <div id="authError" class="auth-error hidden"></div>
 
             <div class="form-group">
-              <label for="authEmail">Email</label>
-              <input type="email" id="authEmail" class="form-input" placeholder="you@example.com" required
-                autocomplete="email">
+              <label for="authEmail">GitHub Token</label>
+              <input type="password" id="authEmail" class="form-input" placeholder="ghp_xxxxxxxxxxxx" required
+                autocomplete="off">
+              <small class="form-hint">Paste your GitHub Personal Access Token</small>
             </div>
 
             <div class="form-group">
-              <label for="authPassword">Password</label>
-              <input type="password" id="authPassword" class="form-input" placeholder="••••••••" required minlength="6"
-                autocomplete="current-password">
+              <label for="authPassword">Save Token?</label>
+              <select id="authPassword" class="form-input">
+                <option value="save">Yes, save for next time</option>
+                <option value="session">Session only</option>
+              </select>
             </div>
 
             <button type="submit" id="authSubmitBtn" class="auth-submit-btn">
-              <span class="btn-text">Sign In</span>
+              <span class="btn-text">Connect GitHub</span>
               <span class="btn-loader hidden"></span>
             </button>
 
-            <button type="button" id="forgotPasswordBtn" class="forgot-password-btn">Forgot password?</button>
-
             <div class="auth-toggle">
-              <span id="authToggleText">Don't have an account?</span>
-              <button type="button" id="authToggleBtn" class="auth-toggle-btn">Sign Up</button>
+              <button type="button" id="authToggleBtn" class="auth-toggle-btn">How to get token?</button>
             </div>
           </form>
 
@@ -278,7 +278,7 @@
               <path d="M12 16v-4" />
               <path d="M12 8h.01" />
             </svg>
-            Your bookmarks are encrypted and stored securely
+            Your bookmarks are stored in a private GitHub Gist
           </p>
         </div>
       </div>

@@ -8,33 +8,30 @@ Intent is a cross-browser extension (Chrome and Firefox) that transforms passive
 
 ## Features
 
-- **Cross-Browser Support** - Works on both Chromium-based browsers (Chrome, Edge, Brave, Opera) and Firefox
+- **Cross-Browser Support** - Works on both Chromium-based browsers (Chrome, Edge, Brave, Opera) and Firefox with a single codebase
 - **3-Second Reflection** - Forces a brief pause to capture your specific thought or purpose before saving
 - **Context Restoration** - When you revisit a saved page, your original intent appears as a subtle overlay
 - **Clean UI** - Minimal, dark-themed glassmorphism design
 - **Search and Organize** - Find bookmarks by title, intent, or URL
 - **Import/Export** - Backup and restore your bookmarks as JSON
-- **Cloud Sync** - Optional sync across devices with email/password authentication (Supabase)
+- **Cloud Sync** - Optional sync across devices using GitHub Gists (free, no server required)
 - **Open Source Ready** - Credentials are kept separate and gitignored
 
 ---
 
 ## Browser Compatibility
 
-Intent ships with two manifest files to support both browser families while sharing the same codebase:
+Intent uses a unified manifest that works on both Chrome and Firefox:
 
 | Feature | Chrome / Chromium | Firefox |
 |---------|-------------------|---------|
-| **Manifest** | `manifest.json` | `manifest.firefox.json` |
 | **Manifest Version** | MV3 | MV3 |
-| **Background Script** | Service Worker (`service_worker`) | Background Script (`scripts`) |
+| **Background Script** | Service Worker | Background Script |
 | **Extension API** | `chrome.*` (polyfilled as `browser.*`) | `browser.*` (native) |
 | **Minimum Version** | Chrome 92+ | Firefox 109+ |
-| **Internal Pages Filtered** | `chrome://`, `chrome-extension://` | `about:`, `moz-extension://`, `browser:` |
 | **Storage API** | `browser.storage.local` (via polyfill) | `browser.storage.local` (native) |
-| **ES Modules** | Supported in Service Worker | Supported in Background Scripts |
 
-A lightweight polyfill (`lib/browser-polyfill.js`) ensures all source code uses the `browser.*` namespace uniformly. In Chrome, it aliases `browser` to the native `chrome` object; in Firefox, `browser` is already available natively.
+A lightweight polyfill (`lib/browser-polyfill.js`) ensures all source code uses the `browser.*` namespace uniformly.
 
 ---
 
@@ -42,136 +39,81 @@ A lightweight polyfill (`lib/browser-polyfill.js`) ensures all source code uses 
 
 This extension is designed for open-source distribution:
 
-- **No hardcoded credentials** - Supabase config is in a separate file (`config.js`) that is gitignored
-- **Secure authentication** - Email/password auth with hashed passwords (handled by Supabase)
-- **Row Level Security** - Users can only access their own bookmarks in the database
+- **No hardcoded credentials** - GitHub config is in a separate file (`config.js`) that is gitignored
+- **Private Gists** - Bookmarks are stored in a private Gist only you can access
 - **Local-first** - Works fully offline; cloud sync is optional
 
 ---
 
 ## Installation
 
-### Chrome / Chromium (Development)
+### Chrome / Chromium
 
-1. Open Chrome (or Edge / Brave) and navigate to `chrome://extensions/` (or `edge://extensions/`)
+1. Open Chrome (or Edge / Brave) and navigate to `chrome://extensions/`
 2. Enable **Developer mode** using the toggle in the top right
 3. Click **Load unpacked**
-4. Select the `Intent` folder (uses `manifest.json`)
+4. Select the `Intent` folder
 
-### Firefox (Development)
+### Firefox
 
 1. Open Firefox and navigate to `about:debugging#/runtime/this-firefox`
 2. Click **Load Temporary Add-on...**
-3. Before loading, copy the Firefox manifest into place:
-   ```bash
-   cp manifest.firefox.json manifest.json
-   ```
-   Or, if you want to keep both manifests, temporarily rename them:
-   ```bash
-   mv manifest.json manifest.chrome.json
-   cp manifest.firefox.json manifest.json
-   ```
-4. Select the `manifest.json` file inside the `Intent` folder
+3. Select the `manifest.json` file inside the `Intent` folder
 
-> **Tip:** For permanent Firefox installation, package the extension with the Firefox manifest as `manifest.json` and submit to [addons.mozilla.org](https://addons.mozilla.org).
+> **Note:** The same `manifest.json` works for both browsers. The Firefox-specific settings (`browser_specific_settings.gecko`) are ignored by Chrome.
 
 ### Production Build
 
-This extension uses vanilla JavaScript with no build step required. To distribute:
+This extension uses vanilla JavaScript with no build step required:
 
-- **Chrome Web Store** - Zip the folder with `manifest.json` (Chrome version) and upload
-- **Firefox Add-ons** - Zip the folder with `manifest.firefox.json` renamed to `manifest.json` and upload
+- **Chrome Web Store** - Zip the folder and upload
+- **Firefox Add-ons** - Zip the folder and upload to AMO
 
 ---
 
 ## Cloud Sync Setup (Optional)
 
-Cloud sync is optional. To enable it:
+Cloud sync is optional. Bookmarks work fully offline. To sync across devices, use GitHub Gists.
 
-### 1. Create a Supabase Project
+### 1. Create a GitHub Personal Access Token
 
-1. Go to [supabase.com](https://supabase.com) and create a free account
-2. Create a new project
-3. Note your **Project URL** and **anon/public key** from Settings > API
+1. Go to [GitHub Settings](https://github.com/settings/tokens) > **Developer settings** > **Personal access tokens**
+2. Click **Generate new token (classic)**
+3. Give it a descriptive name (e.g., "Intent Bookmark Sync")
+4. Select the **gist** scope
+5. Click **Generate token**
+6. **Copy the token immediately** - you won't see it again!
 
-### 2. Set Up the Database
+> **Security Note:** Tokens with only the `gist` scope can only read/write your gists, nothing else. This is safe to use in the extension.
 
-Go to the **SQL Editor** in your Supabase dashboard and run:
-
-```sql
--- Create bookmarks table
-CREATE TABLE IF NOT EXISTS bookmarks (
-  id TEXT PRIMARY KEY,
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-  url TEXT NOT NULL,
-  title TEXT,
-  intent TEXT NOT NULL,
-  favicon TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-  visited_count INT DEFAULT 0,
-  last_visited_at TIMESTAMPTZ,
-  tags TEXT[] DEFAULT '{}',
-  is_archived BOOLEAN DEFAULT FALSE
-);
-
--- Create indexes
-CREATE INDEX IF NOT EXISTS bookmarks_user_id_idx ON bookmarks(user_id);
-CREATE INDEX IF NOT EXISTS bookmarks_url_idx ON bookmarks(url);
-
--- Enable Row Level Security
-ALTER TABLE bookmarks ENABLE ROW LEVEL SECURITY;
-
--- Create policies
-CREATE POLICY "Users can view own bookmarks" ON bookmarks
-  FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can insert own bookmarks" ON bookmarks
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can update own bookmarks" ON bookmarks
-  FOR UPDATE USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can delete own bookmarks" ON bookmarks
-  FOR DELETE USING (auth.uid() = user_id);
-
--- Auto-update timestamp trigger
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW.updated_at = NOW();
-  RETURN NEW;
-END;
-$$ language 'plpgsql';
-
-CREATE TRIGGER update_bookmarks_updated_at
-  BEFORE UPDATE ON bookmarks
-  FOR EACH ROW
-  EXECUTE FUNCTION update_updated_at_column();
-```
-
-### 3. Configure the Extension
+### 2. Configure the Extension
 
 1. Copy `lib/config.example.js` to `lib/config.js`
-2. Update with your Supabase credentials:
+2. Add your GitHub token:
 
 ```javascript
 export const CONFIG = {
-  SUPABASE_URL: 'https://your-project.supabase.co',
-  SUPABASE_ANON_KEY: 'your-anon-key-here',
+  GITHUB_TOKEN: 'ghp_your_token_here',
+  GITHUB_USERNAME: 'your-username',  // optional
   APP_NAME: 'Intent',
   APP_VERSION: '1.0.0',
 };
+
+export function isConfigured() {
+  return CONFIG.GITHUB_TOKEN !== 'YOUR_GITHUB_TOKEN' && CONFIG.GITHUB_TOKEN.length > 0;
+}
 ```
 
-**Important**: `config.js` is gitignored. Each user or deployment needs their own Supabase project.
+3. **Important**: `config.js` is gitignored. Do not commit it with real credentials.
 
-### 4. Enable Email Authentication
+### 3. Connect in the Extension
 
-In your Supabase dashboard:
-1. Go to **Authentication** > **Providers**
-2. Ensure **Email** is enabled
-3. Optionally disable email confirmation for easier testing
+1. Click the Intent extension icon
+2. Click the sync icon (top right)
+3. Paste your GitHub token in the field
+4. Click "Connect GitHub"
+
+Your bookmarks will sync to a private Gist that only you can access.
 
 ---
 
@@ -191,7 +133,7 @@ When you open a saved page, a subtle overlay shows your original intent, helping
 ### Sync Across Devices
 
 1. Click the sync icon in the popup
-2. Sign up or sign in with email and password
+2. Enter your GitHub Personal Access Token
 3. Your bookmarks will sync automatically
 
 ---
@@ -215,8 +157,8 @@ When you open a saved page, a subtle overlay shows your original intent, helping
 | Styling | CSS Variables, Glassmorphism |
 | Local Storage | WebExtension Storage API (`browser.storage.local`) |
 | Cross-Browser | Custom polyfill (`lib/browser-polyfill.js`) |
-| Backend | Supabase (PostgreSQL + Auth) |
-| Auth | Email/Password (Supabase Auth) |
+| Cloud Sync | GitHub Gists API |
+| Auth | GitHub Personal Access Token |
 
 ---
 
@@ -224,8 +166,7 @@ When you open a saved page, a subtle overlay shows your original intent, helping
 
 ```
 Intent/
-├── manifest.json              # Chrome / Chromium manifest (service_worker)
-├── manifest.firefox.json      # Firefox manifest (background scripts + gecko settings)
+├── manifest.json              # Unified manifest (Chrome + Firefox)
 ├── background.js              # Background script / service worker
 ├── .gitignore                 # Excludes config.js from version control
 ├── LICENSE                    # MIT License
@@ -238,10 +179,10 @@ Intent/
 │   ├── content.js             # Intent overlay injection
 │   └── content.css            # Overlay styles
 ├── lib/
-│   ├── browser-polyfill.js    # Cross-browser API shim (browser ↔ chrome)
-│   ├── storage.js             # WebExtension Storage wrapper
-│   ├── config.example.js      # Template for Supabase credentials
-│   └── supabase.js            # Auth and sync client
+│   ├── browser-polyfill.js   # Cross-browser API shim
+│   ├── storage.js            # WebExtension Storage wrapper
+│   ├── config.example.js     # Template for GitHub credentials
+│   └── github-sync.js        # GitHub Gists sync client
 └── icons/
     ├── icon16.png
     ├── icon48.png
@@ -254,12 +195,30 @@ Intent/
 
 | Aspect | Chrome (Chromium) | Firefox |
 |--------|-------------------|---------|
-| **Background execution** | Service Worker — suspends when idle, wakes on events | Persistent background script — stays alive while the browser is open |
-| **API namespace** | `chrome.*` (polyfilled to `browser.*`) | `browser.*` (native, Promise-based) |
-| **Manifest file** | `manifest.json` | `manifest.firefox.json` (rename to `manifest.json` before loading) |
-| **Filtered internal URLs** | `chrome://`, `chrome-extension://`, `about:`, `view-source:` | `about:`, `moz-extension://`, `browser:`, `view-source:` |
-| **Addon signing** | Chrome Web Store required for production | AMO (addons.mozilla.org) required for production |
-| **`browser_specific_settings`** | Not used | Required — includes Gecko add-on ID and min version |
+| **Background execution** | Service Worker — suspends when idle, wakes on events | Background script — stays alive while browser is open |
+| **API namespace** | `chrome.*` (polyfilled to `browser.*`) | `browser.*` (native) |
+| **Filtered internal URLs** | `chrome://`, `chrome-extension://` | `about:`, `moz-extension://`, `browser:` |
+| **Addon signing** | Chrome Web Store required for production | AMO required for production |
+
+---
+
+## Troubleshooting
+
+### "Cloud sync not configured"
+- Copy `lib/config.example.js` to `lib/config.js` and add your GitHub token
+
+### "Sync failed" or authentication errors
+- Verify your GitHub token has the `gist` scope
+- Check your token hasn't expired or been revoked
+- Try generating a new token
+
+### Extension doesn't load in Firefox
+- Make sure you're using Firefox 109+
+- Check `about:debugging` for any error messages
+
+### Overlay doesn't appear when revisiting bookmarks
+- Ensure you're not on a restricted page (about:, chrome:, etc.)
+- Check browser console for errors
 
 ---
 

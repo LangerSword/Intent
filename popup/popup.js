@@ -16,7 +16,7 @@ import {
     importBookmarks
 } from '/lib/storage.js';
 
-import { getSupabase, isConfigured } from '/lib/supabase.js';
+import { getGitHubSync, isConfigured } from '/lib/github-sync.js';
 
 // DOM Elements
 const elements = {
@@ -79,7 +79,7 @@ const elements = {
     authSubmitBtn: document.getElementById('authSubmitBtn'),
     authToggleText: document.getElementById('authToggleText'),
     authToggleBtn: document.getElementById('authToggleBtn'),
-    forgotPasswordBtn: document.getElementById('forgotPasswordBtn'),
+    forgotPasswordBtn: null,
 
     // Onboarding
     onboardingModal: document.getElementById('onboardingModal'),
@@ -142,15 +142,15 @@ async function init() {
 }
 
 async function checkAuthStatus() {
-    const supabase = getSupabase();
-    if (!supabase) {
-        // Supabase not configured, hide sync button or show config message
+    const github = getGitHubSync();
+    if (!github) {
         elements.syncBtn.title = 'Cloud sync not configured';
         return;
     }
 
     try {
-        currentUser = await supabase.getUser();
+        const user = await github.getAuthenticatedUser();
+        currentUser = user;
         updateSyncButtonState();
     } catch (error) {
         console.error('Intent: Error checking auth status', error);
@@ -160,7 +160,7 @@ async function checkAuthStatus() {
 function updateSyncButtonState() {
     if (currentUser) {
         elements.syncBtn.classList.add('authenticated');
-        elements.syncBtn.title = `Synced as ${currentUser.email}`;
+        elements.syncBtn.title = `Synced as ${currentUser.login || currentUser.email || 'GitHub'}`;
     } else {
         elements.syncBtn.classList.remove('authenticated');
         elements.syncBtn.title = 'Sign in to sync';
@@ -303,7 +303,6 @@ function setupEventListeners() {
 
     elements.authForm.addEventListener('submit', handleAuthSubmit);
     elements.authToggleBtn.addEventListener('click', toggleAuthMode);
-    elements.forgotPasswordBtn.addEventListener('click', handleForgotPassword);
     elements.signOutBtn.addEventListener('click', handleSignOut);
     elements.syncNowBtn.addEventListener('click', handleSyncNow);
 
@@ -675,24 +674,7 @@ async function handleImport(e) {
 // ========================================
 
 function toggleAuthMode() {
-    isSignUpMode = !isSignUpMode;
-
-    if (isSignUpMode) {
-        elements.authModalTitle.textContent = 'Create Account';
-        elements.authSubmitBtn.querySelector('.btn-text').textContent = 'Sign Up';
-        elements.authToggleText.textContent = 'Already have an account?';
-        elements.authToggleBtn.textContent = 'Sign In';
-        elements.forgotPasswordBtn.classList.add('hidden');
-    } else {
-        elements.authModalTitle.textContent = 'Sign In';
-        elements.authSubmitBtn.querySelector('.btn-text').textContent = 'Sign In';
-        elements.authToggleText.textContent = "Don't have an account?";
-        elements.authToggleBtn.textContent = 'Sign Up';
-        elements.forgotPasswordBtn.classList.remove('hidden');
-    }
-
-    // Clear error
-    hideAuthError();
+    showAuthError('Go to GitHub Settings > Developer settings > Personal access tokens. Generate new token with "gist" scope. Paste it above.');
 }
 
 function showAuthError(message) {
@@ -721,9 +703,9 @@ function setAuthLoading(loading) {
 async function handleAuthSubmit(e) {
     e.preventDefault();
 
-    const supabase = getSupabase();
-    if (!supabase) {
-        showAuthError('Cloud sync is not configured. Please set up Supabase credentials.');
+    const github = getGitHubSync();
+    if (!github) {
+        showAuthError('Cloud sync is not configured. Please set up GitHub credentials.');
         return;
     }
 
@@ -734,47 +716,20 @@ async function handleAuthSubmit(e) {
     setAuthLoading(true);
 
     try {
-        if (isSignUpMode) {
-            const result = await supabase.signUp(email, password);
+        // For GitHub, we use Personal Access Token directly as password
+        // The token should be provided in the password field
+        github.token = password;
+        
+        const user = await github.getAuthenticatedUser();
+        currentUser = user;
 
-            if (result.needsConfirmation) {
-                showAuthError('Please check your email to confirm your account.');
-                setAuthLoading(false);
-                return;
-            }
-
-            currentUser = result.user;
-        } else {
-            const result = await supabase.signIn(email, password);
-            currentUser = result.user;
-        }
-
-        // Success - update UI
         updateSyncButtonState();
         showAuthenticatedState();
 
-        // Sync bookmarks
         await handleSyncNow();
     } catch (error) {
         console.error('Intent: Auth error', error);
-
-        // Detailed error handling
-        let message = error.message || 'Authentication failed. Please try again.';
-
-        if (message.includes('Invalid email or password')) {
-            message = 'Incorrect email or password.';
-            // If they are in Sign In mode, maybe they need to Sign Up?
-            if (!isSignUpMode) {
-                // We could show a hint, but keeping it simple is better.
-                // Just ensuring the message is friendly.
-            }
-        } else if (message.includes('User already registered')) {
-            message = 'This email is already registered. Try signing in?';
-            if (isSignUpMode) {
-                // Auto-switch to sign in? No, let user choose.
-            }
-        }
-
+        let message = error.message || 'Authentication failed. Please check your token.';
         showAuthError(message);
     } finally {
         setAuthLoading(false);
@@ -782,33 +737,15 @@ async function handleAuthSubmit(e) {
 }
 
 async function handleForgotPassword() {
-    const supabase = getSupabase();
-    if (!supabase) {
-        showAuthError('Cloud sync is not configured.');
-        return;
-    }
-
-    const email = elements.authEmail.value.trim();
-
-    if (!email) {
-        showAuthError('Please enter your email address first.');
-        return;
-    }
-
-    try {
-        await supabase.resetPassword(email);
-        showAuthError('Password reset email sent! Check your inbox.');
-    } catch (error) {
-        showAuthError(error.message || 'Failed to send reset email.');
-    }
+    showAuthError('Reset your token in GitHub settings. Use a new Personal Access Token.');
 }
 
 async function handleSignOut() {
-    const supabase = getSupabase();
-    if (!supabase) return;
+    const github = getGitHubSync();
+    if (!github) return;
 
     try {
-        await supabase.signOut();
+        github.token = '';
         currentUser = null;
         updateSyncButtonState();
         showLoginForm();
@@ -818,23 +755,20 @@ async function handleSignOut() {
 }
 
 async function handleSyncNow() {
-    const supabase = getSupabase();
-    if (!supabase || !currentUser) return;
+    const github = getGitHubSync();
+    if (!github || !currentUser) return;
 
     elements.syncNowBtn.classList.add('syncing');
     elements.syncNowBtn.disabled = true;
 
     try {
         const localBookmarks = await getBookmarks();
-        const mergedBookmarks = await supabase.syncBookmarks(localBookmarks);
+        const mergedBookmarks = await github.syncBookmarks(localBookmarks);
 
-        // Update local storage with merged bookmarks
         await browser.storage.local.set({ intent_bookmarks: mergedBookmarks });
 
-        // Reload UI
         await loadBookmarks();
 
-        // Show success
         const originalText = elements.syncNowBtn.innerHTML;
         elements.syncNowBtn.innerHTML = '✓ Synced!';
         setTimeout(() => {
@@ -857,18 +791,13 @@ function syncInBackground() {
 function showAuthenticatedState() {
     elements.authForm.classList.add('hidden');
     elements.authStatus.classList.remove('hidden');
-    elements.authUserEmail.textContent = currentUser?.email || '';
-    elements.forgotPasswordBtn.classList.add('hidden');
-
-    // Hide toggle
-    elements.authToggleText.parentElement.classList.add('hidden');
+    elements.authUserEmail.textContent = currentUser?.login || currentUser?.name || 'Connected';
 }
 
 function showLoginForm() {
     elements.authForm.classList.remove('hidden');
     elements.authStatus.classList.add('hidden');
-    elements.forgotPasswordBtn.classList.remove('hidden');
-    elements.authToggleText.parentElement.classList.remove('hidden');
+    elements.authToggleBtn.style.display = 'inline';
 
     // Reset form
     elements.authEmail.value = '';
