@@ -1,0 +1,27 @@
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  lemon:
+    image: delcagox/lemonx:latest
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      - CLOUDFLARE_ACCOUNT_ID=${CLOUDFLARE_ACCOUNT_ID}
+      - CLOUDFLARE_API_KEY=${CLOUDFLARE_API_KEY}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    stop_grace_period: 5s
+
+volumes:
+  redis_data: 

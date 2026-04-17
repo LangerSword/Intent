@@ -16,40 +16,31 @@ Intent transforms passive bookmarking into intentional research. It captures *wh
 
 The previous version used `service_worker` in the manifest which is **disabled by default** in many browser configurations and doesn't work properly on Firefox.
 
-**Solution:** Changed to `background.scripts` which works on both Chrome and Firefox:
+**Solution:** Changed to `background.scripts` which works on both Chrome and Firefox.
 
-```json
-// Before (broken)
-"background": {
-  "service_worker": "js/background.js"
-}
+### Fixed: Theme Toggle
 
-// After (works)
-"background": {
-  "scripts": ["js/background.js"]
-}
-```
+The theme toggle now works correctly. Toggle between dark and light modes using the sun icon in the header. Theme preference is saved and persists.
 
-This ensures the background script runs reliably on all supported browsers.
+### New UI
 
-### Other Updates
-- Sleeker black UI with sharper contrast
-- Light mode toggle with bulb icon in header
-- Improved theme persistence
-- Streamlined codebase (no more broken ES module imports)
+- Clean black & white design (no more purple/gradients)
+- High contrast: black background, white text in dark mode
+- White background, black text in light mode
+- Simple, minimal styling inspired by clean design principles
 
 ---
 
 ## Features
 
 - **Works Offline** — Full functionality without any account or login
-- **3-Second Reflection** — Thoughtful pause before saving helps you articulate your intent
-- **Context Overlay** — When you revisit a saved page, your original intent appears as a subtle overlay
-- **Cross-Browser** — Works on Chrome, Firefox, Edge, Brave, and other Chromium browsers
-- **Theme Toggle** — Click the moon/sun icon to switch between dark and light modes
+- **3-Second Reflection** — Thoughtful pause before saving
+- **Context Overlay** — See your intent when revisiting saved pages
+- **Cross-Browser** — Works on Chrome, Firefox, Edge, Brave
+- **Theme Toggle** — Click the sun icon to switch between dark/light modes
 - **Search & Organize** — Find bookmarks by title, intent, or URL
-- **Import/Export** — Backup and restore your data as JSON
-- **Optional Cloud Sync** — Sync across devices using your GitHub account
+- **Import/Export** — Backup and restore as JSON
+- **Optional Cloud Sync** — Sync via GitHub Gists
 
 ---
 
@@ -69,8 +60,6 @@ This ensures the background script runs reliably on all supported browsers.
 3. Click **Load Temporary Add-on...**
 4. Select `manifest.json` from the `Intent` folder
 
-> **Note:** The same `manifest.json` works for both Chrome and Firefox. The Firefox-specific settings are ignored by Chrome.
-
 ---
 
 ## How It Works
@@ -82,19 +71,13 @@ This ensures the background script runs reliably on all supported browsers.
 3. Write your reason for saving
 4. Click **Save with Intent**
 
-The 3-second timer encourages thoughtful reflection. You can update your intent anytime.
-
 ### Toggle Theme
 
-Click the **moon icon** in the header to switch to light mode. Click the **sun icon** to switch back to dark mode. Theme preference is saved automatically.
-
-### Revisit Context
-
-When you open a saved page, an overlay appears showing your original intent — instant recall of why you bookmarked it.
+Click the **sun icon** in the header to switch to light mode. Click again to switch back to dark mode.
 
 ### Library
 
-All saved bookmarks are stored in the **Library** tab. Search by title, intent, or URL. Click any bookmark to open it.
+All saved bookmarks are in the **Library** tab. Search by title, intent, or URL. Click any bookmark to open it.
 
 ---
 
@@ -102,52 +85,30 @@ All saved bookmarks are stored in the **Library** tab. Search by title, intent, 
 
 | Setting | Options | Description |
 |---------|---------|-------------|
-| Overlay Duration | 3s / 5s / 10s / Manual | How long the intent overlay stays visible |
-| Overlay Position | Bottom Right / Left, Top Right / Left | Where the overlay appears |
+| Overlay Duration | 3s / 5s / 10s / Manual | How long the overlay stays |
+| Overlay Position | Bottom/Top + Left/Right | Where the overlay appears |
 | Dark Mode | On / Off | Toggle theme |
-| Export/Import | JSON | Backup or restore bookmarks |
 
 ---
 
 ## Cloud Sync (Optional)
 
-Cloud sync is entirely optional. Your bookmarks work fully offline.
+Cloud sync is optional. Your bookmarks work fully offline.
 
 ### Connect GitHub
 
-1. Open **Settings** → Click **Connect Cloud Sync**
-2. Create a GitHub Personal Access Token:
-   - Go to [GitHub Settings → Tokens](https://github.com/settings/tokens)
-   - Generate new token (classic)
-   - Select the `gist` scope
-   - Copy the token
-3. Paste the token in the extension
-4. Click **Connect GitHub**
-
-Your bookmarks sync to a private Gist only you can access.
-
-### Disconnect
-
-Click **Disconnect** in the sync settings to stop syncing. Your local bookmarks remain.
+1. Open **Settings** → **Connect Cloud Sync**
+2. Create a GitHub Personal Access Token with `gist` scope
+3. Paste the token and click **Connect GitHub**
 
 ---
 
 ## Security
 
 - **Local-first** — Works fully offline
-- **No required account** — Use without any login
+- **No required account** — Use without login
 - **Token stored locally** — GitHub token never leaves your device
 - **Private Gist** — Synced bookmarks go to a private Gist only you can access
-- **No tracking** — No analytics, no external calls except when you connect sync
-
----
-
-## Tech Stack
-
-- **Manifest V3** — Modern extension API
-- **Vanilla JavaScript** — No frameworks, no build step
-- **WebExtension Storage** — Browser-native local storage
-- **GitHub Gists API** — Optional cloud sync
 
 ---
 
@@ -155,27 +116,17 @@ Click **Disconnect** in the sync settings to stop syncing. Your local bookmarks 
 
 ```
 Intent/
-├── manifest.json         # Extension manifest (works for Chrome + Firefox)
-├── popup.html            # Main popup UI with embedded styles
+├── manifest.json         # Extension manifest
+├── popup.html            # Main popup UI
 ├── js/
 │   ├── popup.js          # Popup logic
-│   ├── storage.js        # Local storage + optional sync
+│   ├── storage.js        # Local storage + sync
 │   ├── background.js    # Background script
-│   └── content.js       # Intent overlay injection
+│   └── content.js       # Intent overlay
 ├── css/
 │   └── content.css      # Overlay styles
-├── icons/               # Extension icons
-└── README.md
+└── icons/               # Extension icons
 ```
-
----
-
-## Contributing
-
-1. Fork the repository
-2. Make your changes
-3. Test on both Chrome and Firefox
-4. Open a Pull Request
 
 ---
 
@@ -183,8 +134,31 @@ Intent/
 
 MIT — See [LICENSE](LICENSE) for details.
 
----
+## GitHub Actions – AI Test Loop
 
-## Acknowledgments
+This repo uses an AI-powered test-fix loop that runs automatically on every push and pull request (except `main`).
 
-Built with modern web technologies for intentional browsing across all major browsers.
+### Required: Add Repository Secrets
+
+Before pushing, you must add the following secrets to your GitHub repository, or the workflow will fail:
+
+| Secret Name | Description |
+|---|---|
+| `CLOUDFLARE_ACCOUNT_ID` | Your Cloudflare Account ID |
+| `CLOUDFLARE_API_KEY` | Your Cloudflare API Key |
+
+**How to add secrets:**
+1. Go to your repository on GitHub
+2. Navigate to **Settings -> Secrets and variables -> Actions**
+3. Click **"New repository secret"**
+4. Add each secret listed above
+
+### What it does
+
+On every push/PR to a non-`main` branch, the workflow:
+1. Checks out your repository
+2. Verifies Docker and Docker Compose are available
+3. Runs the AI test-fix loop via `docker compose up`
+4. Cleans up containers and volumes after completion
+
+The workflow file lives at `.github/workflows/ai-test-loop.yml`.
