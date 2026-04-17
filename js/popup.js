@@ -355,8 +355,8 @@ function applySettings() {
   document.getElementById('overlayPosition').value = settings.overlayPosition;
   document.getElementById('darkModeToggle').checked = settings.darkMode;
   
-  // Apply theme
-  if (!settings.darkMode) {
+  // Apply theme - darkMode: true = dark, false = light
+  if (settings.darkMode === false) {
     document.documentElement.setAttribute('data-theme', 'light');
   } else {
     document.documentElement.removeAttribute('data-theme');
@@ -364,28 +364,30 @@ function applySettings() {
 }
 
 function toggleTheme() {
-  const isDark = document.documentElement.hasAttribute('data-theme');
-  const newDarkMode = isDark;
+  const isLight = document.documentElement.hasAttribute('data-theme');
   
-  if (isDark) {
-    document.documentElement.setAttribute('data-theme', 'light');
-  } else {
+  if (isLight) {
     document.documentElement.removeAttribute('data-theme');
+    document.getElementById('darkModeToggle').checked = true;
+  } else {
+    document.documentElement.setAttribute('data-theme', 'light');
+    document.getElementById('darkModeToggle').checked = false;
   }
   
-  // Save the new setting
   handleSettingChange();
 }
 
 async function handleSettingChange() {
-  const isDark = !document.documentElement.hasAttribute('data-theme');
+  // Use the checkbox value directly since we sync it in toggleTheme
+  const isDark = document.getElementById('darkModeToggle').checked;
   const newSettings = {
     overlayDuration: parseInt(document.getElementById('overlayDuration').value),
     overlayPosition: document.getElementById('overlayPosition').value,
     darkMode: isDark,
   };
 
-  settings = await window.IntentStorage.updateSettings(newSettings);
+  await window.IntentStorage.updateSettings(newSettings);
+  settings = newSettings;
 }
 
 async function handleExport() {
